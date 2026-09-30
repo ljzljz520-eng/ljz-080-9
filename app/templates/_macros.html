@@ -1,0 +1,16 @@
+{% macro badge(value, mapping, cls_map=BADGE_CLASS) -%}
+<span class="{{ cls_map.get(value, 'badge badge-gray') }}">{{ mapping.get(value, value) }}</span>
+{%- endmacro %}
+
+{% macro progress(done, total) -%}
+{% set pct = (100 * done / total) | round(0, 'floor') if total else 0 %}
+<div class="progress {{ 'warn' if pct >= 90 else '' }}"><span style="width: {{ pct }}%"></span></div>
+<small class="muted">{{ done }}/{{ total }} 份 · {{ pct }}%</small>
+{%- endmacro %}
+
+{% macro slots_bar(adopted, total) -%}
+{% set left = [total - adopted, 0] | max %}
+{% set pct = (100 * adopted / total) | round(0, 'floor') if total else 0 %}
+<div class="progress"><span style="width: {{ pct }}%"></span></div>
+<small class="muted">已认养 {{ adopted }}/{{ total }} 份，剩余 {{ left }} 份</small>
+{%- endmacro %}

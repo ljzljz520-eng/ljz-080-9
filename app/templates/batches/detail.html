@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, slots_bar %}
+{% block content %}
+<a href="/batches" class="muted">← 返回批次列表</a>
+<h1 class="page-title mt">{{ CROP_ICONS[batch.crop_type] }} {{ batch.name }}</h1>
+<p class="page-sub">{{ batch.season }} · {{ batch.farmer_name }} 出品</p>
+
+{% if active_event %}
+<div class="weather-banner">
+  ⚠️ <strong>天气预警：</strong>{{ EVENT_TYPES[active_event.event_type] }}（{{ SEVERITY[active_event.severity] }}），
+  预计影响产量约 {{ active_event.yield_impact_pct }}%。平台将为已认养消费者提供<b>改期 / 退款 / 换批次</b>三种方案。
+  {% if current_user and current_user.role == 'consumer' %}请前往「我的认养」中做出选择。{% endif %}
+</div>
+{% endif %}
+
+<div class="grid grid-2">
+  <div>
+    <div class="card card-section">
+      <h3>批次信息</h3>
+      <table class="data" style="box-shadow:none;">
+        <tr><th style="width:110px">状态</th><td>{{ badge(batch.status, BATCH_STATUS) }} {{ badge(batch.weather_status, BATCH_WEATHER_STATUS) }}</td></tr>
+        <tr><th>品种</th><td>{{ batch.crop_name }}</td></tr>
+        <tr><th>地块</th><td><a href="/plots/{{ batch.plot_id }}">{{ batch.plot_name }}</a></td></tr>
+        <tr><th>产地</th><td>{{ batch.location }}</td></tr>
+        <tr><th>每份产量</th><td>{{ batch.yield_desc }}</td></tr>
+        <tr><th>采摘期</th><td>{{ batch.pickup_start | date }} 至 {{ batch.pickup_end | date }}</td></tr>
+        <tr><th>取货方式</th><td>{% for d in batch.delivery_options.split(',') %}<span class="badge badge-blue" style="margin-right:5px">{{ DELIVERY_MODES[d] }}</span>{% endfor %}
+        </td></tr>
+        <tr><th>认养进度</th><td>{{ slots_bar(batch.adopted_slots, batch.total_slots) }}</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>天气与产量记录</h3>
+      {% for e in events %}
+      <div class="timeline-item">
+        <div class="t">{{ e.event_date | date }}</div>
+        <div>{{ EVENT_TYPES[e.event_type] }} · 影响 {{ e.yield_impact_pct }}% · {{ badge(e.status, EVENT_STATUS) }}</div>
+        <div class="muted">{{ e.description }}</div>
+      </div>
+      {% else %}
+      <div class="empty small">暂无天气事件，长势良好 🌤️</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <div class="card form-card-wide" style="max-width:none">
+      <h3>立即认养</h3>
+      <div class="mb"><span class="price" style="font-size:28px">{{ batch.unit_price | money }}</span> <span class="muted">/ 份</span></div>
+      {% if current_user and current_user.role == 'consumer' and batch.status != 'closed' and batch.adopted_slots < batch.total_slots %}
+      <form method="post" action="/consumer/adoptions">
+        <input type="hidden" name="batch_id" value="{{ batch.id }}">
+        <label class="field">认养份数
+          <input type="number" name="slots" value="1" min="1" max="20" required>
+        </label>
+        <label class="field">计划采摘日期 <span class="hint">（{{ batch.pickup_start | date }} ~ {{ batch.pickup_end | date }}）</span>
+          <input type="date" name="scheduled_date" min="{{ batch.pickup_start }}" max="{{ batch.pickup_end }}" required>
+        </label>
+        <label class="field">取货 / 配送方式
+          <select name="delivery_mode" id="deliveryMode">
+            {% for d in batch.delivery_options.split(',') %}
+            <option value="{{ d }}">{{ DELIVERY_MODES[d] }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="field" id="addrField">收货地址 <span class="hint">（配送时必填）</span>
+          <textarea name="delivery_address" rows="2" placeholder="详细收货地址">{{ current_user.address or '' }}</textarea>
+        </label>
+        <div class="grid grid-2">
+          <label class="field">联系人
+            <input type="text" name="contact_name" value="{{ current_user.display_name }}" required>
+          </label>
+          <label class="field">联系电话
+            <input type="tel" name="contact_phone" value="{{ current_user.phone or '' }}" required>
+          </label>
+        </div>
+        <button class="btn" type="submit" style="width:100%">确认认养（预售下单）</button>
+      </form>
+      {% elif not current_user %}
+        <div class="alert alert-info">登录后即可认养。还没有账号？<a href="/auth/register">立即注册</a></div>
+        <a class="btn secondary" href="/auth/login">去登录</a>
+      {% elif batch.status == 'closed' %}
+        <div class="alert alert-warn">该批次已结束认养。</div>
+      {% elif batch.adopted_slots >= batch.total_slots %}
+        <div class="alert alert-warn">本批次已约满，看看其他批次吧。</div>
+      {% else %}
+        <div class="muted">仅消费者账号可以下单认养。</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const modeSel = document.getElementById('deliveryMode');
+const addrField = document.getElementById('addrField');
+function syncAddr() {
+  if (!modeSel) return;
+  addrField.style.display = modeSel.value === 'self_pickup' ? 'none' : 'block';
+}
+if (modeSel) { modeSel.addEventListener('change', syncAddr); syncAddr(); }
+</script>
+{% endblock %}

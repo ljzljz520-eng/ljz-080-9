@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, slots_bar %}
+{% block content %}
+<h1 class="page-title">认养批次</h1>
+<p class="page-sub">果园 🍑 · 茶田 🍵 · 菜地 🥬，预售认养，按批次采摘</p>
+
+<div class="filters card">
+  <form method="get" action="/batches">
+    <select name="crop_type">
+      <option value="">全部类型</option>
+      {% for k, v in CROP_TYPES.items() %}
+      <option value="{{ k }}" {{ 'selected' if crop_type == k }}>{{ v }}</option>
+      {% endfor %}
+    </select>
+    <select name="weather">
+      <option value="">全部天气状态</option>
+      <option value="affected" {{ 'selected' if weather == 'affected' }}>受天气影响</option>
+    </select>
+    <input type="text" name="q" value="{{ q }}" placeholder="搜索品种 / 产地">
+    <button class="btn sm" type="submit">筛选</button>
+    <a class="btn ghost sm" href="/batches">重置</a>
+  </form>
+</div>
+
+<div class="grid grid-3">
+  {% for b in batches %}
+  <div class="card batch-card">
+    <div class="title">{{ CROP_ICONS[b.crop_type] }} {{ b.name }}</div>
+    <div class="tag-line">
+      {{ badge(b.status, BATCH_STATUS) }}
+      {{ badge(b.weather_status, BATCH_WEATHER_STATUS) }}
+    </div>
+    <div class="muted">{{ b.crop_name }} · {{ b.farmer_name }}</div>
+    <div class="muted">📍 {{ b.location }}</div>
+    <div class="muted">采摘期：{{ b.pickup_start | date }} 至 {{ b.pickup_end | date }}</div>
+    {{ slots_bar(b.adopted_slots, b.total_slots) }}
+    <div class="flex"><span class="price">{{ b.unit_price | money }}</span><span class="muted">/ 份 · {{ b.yield_desc }}</span>
+      <span style="flex:1"></span><a class="btn sm" href="/batches/{{ b.id }}">查看详情</a></div>
+  </div>
+  {% else %}
+  <div class="empty" style="grid-column:1/-1">没有符合条件的批次</div>
+  {% endfor %}
+</div>
+{% endblock %}

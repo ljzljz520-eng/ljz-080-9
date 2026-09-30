@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block content %}
+<h1 class="page-title">我的认养</h1>
+<p class="page-sub">查看订单、选择天气应对方案、登记采摘与发起售后</p>
+
+{% for a in adoptions %}
+{% set needs_choice = a.pending_count > 0 and a.status in ('booked','rescheduled') %}
+<div class="card card-section" style="{% if needs_choice %}border-left:4px solid var(--red);{% endif %}">
+  <div class="flex flex-wrap">
+    <div>
+      <strong style="font-size:16px">{{ CROP_ICONS[a.crop_type] }} {{ a.batch_name }}</strong>
+      <div class="muted small">{{ a.plot_name }} · 📍 {{ a.location }}</div>
+    </div>
+    <span style="flex:1"></span>
+    {{ badge(a.status, ADOPTION_STATUS) }}
+    {% if a.weather_status == 'affected' and a.status in ('booked','rescheduled') %}
+      {{ badge('affected', BATCH_WEATHER_STATUS) }}
+    {% endif %}
+  </div>
+  <table class="data mt" style="box-shadow:none;">
+    <tr>
+      <th>认养份数</th><td>{{ a.slots }} 份</td>
+      <th>实付金额</th><td>{{ a.amount | money }}</td>
+      <th>计划采摘</th><td>{{ a.scheduled_date | date }}</td>
+      <th>取货方式</th><td>{{ DELIVERY_MODES[a.delivery_mode] }}</td>
+    </tr>
+    {% if a.delivery_address %}
+    <tr><th>收货地址</th><td colspan="7">{{ a.delivery_address }}（{{ a.contact_name }} {{ a.contact_phone }}）</td></tr>
+    {% else %}
+    <tr><th>联系人</th><td colspan="7">{{ a.contact_name }} {{ a.contact_phone }}（到园自提）</td></tr>
+    {% endif %}
+  </table>
+
+  {% if needs_choice %}
+  <div class="weather-banner mt">
+    🌦️ 该批次受天气影响产量，请在农户提供的方案中做出选择：
+    <a class="btn sm danger" style="margin-left:10px" href="/consumer/adoptions/{{ a.id }}/resolution">去选择改期 / 退款 / 换批次 →</a>
+  </div>
+  {% endif %}
+
+  {% if a.status in ('booked','picked','rescheduled') %}
+  <details class="mt">
+    <summary class="muted" style="cursor:pointer">发起售后</summary>
+    <form method="post" action="/consumer/after-sales" class="mt">
+      <input type="hidden" name="adoption_id" value="{{ a.id }}">
+      <div class="flex">
+        <select name="issue_type" style="width:auto">
+          {% for k, v in AFTERSALE_TYPES.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+        </select>
+        <input type="text" name="content" placeholder="请描述问题，如碰伤、缺斤少两、配送延迟…" required>
+        <button class="btn sm" type="submit">提交</button>
+      </div>
+    </form>
+  </details>
+  {% endif %}
+</div>
+{% else %}
+<div class="card empty">还没有认养订单，去 <a href="/batches">挑选一个批次</a> 吧 🧺</div>
+{% endfor %}
+
+{% if after_sales %}
+<h2 class="page-title">我的售后</h2>
+<div class="card" style="padding:0">
+<table class="data" style="box-shadow:none;">
+  <thead><tr><th>批次</th><th>类型</th><th>问题</th><th>状态</th><th>平台回复</th><th>时间</th></tr></thead>
+  <tbody>
+  {% for s in after_sales %}
+  <tr>
+    <td><a href="/batches/{{ s.batch_id }}">批次 #{{ s.batch_id }}</a></td>
+    <td>{{ AFTERSALE_TYPES[s.issue_type] }}</td>
+    <td>{{ s.content }}</td>
+    <td>{{ badge(s.status, AFTERSALE_STATUS) }}</td>
+    <td>{{ s.reply or '待平台处理' }}</td>
+    <td class="small muted">{{ s.created_at | datetime }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block content %}
+<div class="flex mb">
+  <h1 class="page-title" style="margin:0">天气事件监管</h1>
+  <span style="flex:1"></span>
+  <a class="btn ghost sm" href="/admin/weather-events">全部</a>
+  <a class="btn ghost sm" href="/admin/weather-events?status=open">待处理</a>
+  <a class="btn ghost sm" href="/admin/weather-events?status=resolved">已处理</a>
+</div>
+
+<div class="card" style="padding:0">
+<table class="data" style="box-shadow:none;">
+  <thead><tr><th>日期</th><th>地块 / 批次</th><th>农户</th><th>类型</th><th>程度</th><th>减产</th><th>方案选择进度</th><th>状态</th><th>说明</th><th></th></tr></thead>
+  <tbody>
+  {% for e in events %}
+  <tr>
+    <td>{{ e.event_date | date }}</td>
+    <td>{{ e.plot_name }}<div class="small muted"><a href="/batches/{{ e.batch_id }}">{{ e.batch_name }}</a></div></td>
+    <td>{{ e.farmer_name }}</td>
+    <td>{{ EVENT_TYPES[e.event_type] }}</td>
+    <td>{{ badge(e.severity, SEVERITY) }}</td>
+    <td>{{ e.yield_impact_pct }}%</td>
+    <td>
+      <div class="progress {{ 'warn' if e.pending_adoptions else '' }}"><span style="width: {{ (100 * e.accepted_adoptions / (e.pending_adoptions + e.accepted_adoptions)) | round if (e.pending_adoptions + e.accepted_adoptions) else 100 }}%"></span></div>
+      <span class="muted small">{{ e.accepted_adoptions }} 已选 / {{ e.pending_adoptions }} 待选</span>
+    </td>
+    <td>{{ badge(e.status, EVENT_STATUS) }}</td>
+    <td class="small muted" style="max-width:220px">{{ e.description }}</td>
+    <td>
+      {% if e.status == 'open' and e.pending_adoptions == 0 %}
+      <form method="post" action="/admin/weather-events/{{ e.id }}/resolve">
+        <button class="btn sm" type="submit">标记完成</button>
+      </form>
+      {% elif e.status == 'open' %}
+      <span class="muted small">等待消费者选择</span>
+      {% else %}
+      <span class="muted small">已归档</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="10" class="empty">暂无天气事件</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

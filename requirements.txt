@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+jinja2
+duckdb
+python-multipart
+itsdangerous

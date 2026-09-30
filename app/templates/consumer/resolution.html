@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block content %}
+<a href="/consumer" class="muted">← 返回我的认养</a>
+<h1 class="page-title mt">选择天气应对方案</h1>
+<p class="page-sub">{{ adoption.batch_name }} · {{ adoption.slots }} 份 · 已付 {{ adoption.amount | money }}</p>
+
+<div class="card mb">
+  <h3 class="mt0">🌦️ 天气影响情况</h3>
+  <p class="muted" style="margin:4px 0">
+    {{ EVENT_TYPES[event.event_type] }}（{{ SEVERITY[event.severity] }}）发生于 {{ event.event_date | date }}，
+    预计减产约 <strong style="color:var(--red)">{{ event.yield_impact_pct }}%</strong>
+  </p>
+  <p class="small muted">{{ event.description }}</p>
+</div>
+
+<form method="post" action="/consumer/adoptions/{{ adoption.id }}/resolution">
+  {% for r in resolutions %}
+  <div class="option-card">
+    <label>
+      <div class="opt-head">
+        <input type="radio" name="resolution_id" value="{{ r.id }}" required>
+        方案：{{ RESOLUTION_TYPES[r.option] }}
+      </div>
+      <div class="mt small">
+        {% if r.option == 'reschedule' %}
+          📅 改期至 <strong>{{ r.new_date | date }}</strong> 采摘
+        {% elif r.option == 'refund' %}
+          💰 退款 <strong class="price">{{ r.refund_amount | money }}</strong>（原路退回）
+        {% else %}
+          🔄 换至批次 <strong>{{ r.new_batch_name }}</strong>
+        {% endif %}
+      </div>
+      <p class="muted small" style="margin-bottom:0">{{ r.note }}</p>
+    </label>
+  </div>
+  {% endfor %}
+  <button class="btn" type="submit" onclick="return confirm('确认选择该方案？提交后不可更改。')">确认我的选择</button>
+</form>
+{% endblock %}

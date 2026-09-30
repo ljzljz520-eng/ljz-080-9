@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, slots_bar %}
+{% block content %}
+<section class="hero">
+  <h1>从枝头到餐桌，认养一块属于你的土地</h1>
+  <p>果园、茶田、菜地预售认养：选定地块与采摘时间，到园自提或配送到家。遇到霜冻、冰雹等天气影响产量，平台为你提供改期、退款或换批次三种保障。</p>
+  <a class="btn" href="/batches">浏览认养批次</a>
+  <a class="btn secondary" href="/plots">查看地块</a>
+</section>
+
+<div class="grid grid-4 mb">
+  <div class="kpi"><div class="v">{{ stats.plot_count }}</div><div class="l">在营地块</div></div>
+  <div class="kpi"><div class="v">{{ stats.active_batches }}</div><div class="l">认养中批次</div></div>
+  <div class="kpi"><div class="v">{{ stats.farmer_count }}</div><div class="l">入驻农户</div></div>
+  <div class="kpi"><div class="v">{{ stats.adoption_count }}</div><div class="l">累计认养份数</div></div>
+</div>
+
+<div class="flex mb"><h2 class="page-title" style="margin:0">最新批次</h2><span class="spacer" style="flex:1"></span><a href="/batches">查看全部 →</a></div>
+<div class="grid grid-3">
+  {% for b in batches %}
+  <div class="card batch-card">
+    <div class="title">{{ CROP_ICONS[b.crop_type] }} {{ b.name }}</div>
+    <div class="tag-line">
+      {{ badge(b.status, BATCH_STATUS) }}
+      {{ badge(b.weather_status, BATCH_WEATHER_STATUS) }}
+      <span class="badge badge-gray">{{ CROP_TYPES[b.crop_type] }}</span>
+    </div>
+    <div class="muted">{{ b.plot_name }} · {{ b.location }}</div>
+    <div class="muted">采摘期：{{ b.pickup_start | date }} 至 {{ b.pickup_end | date }}</div>
+    {{ slots_bar(b.adopted_slots, b.total_slots) }}
+    <div class="flex"><span class="price">{{ b.unit_price | money }}</span><span class="muted">/ 份</span>
+      <span style="flex:1"></span><a class="btn sm" href="/batches/{{ b.id }}">去认养</a></div>
+  </div>
+  {% else %}
+  <div class="empty">暂无批次</div>
+  {% endfor %}
+</div>
+{% endblock %}

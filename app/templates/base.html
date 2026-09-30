@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}绿野认养 · 农产品预售采摘认养平台{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+</head>
+<body>
+<nav class="nav">
+  <a class="brand" href="/">🌱 绿野认养</a>
+  <a href="/batches">认养批次</a>
+  <a href="/plots">地块</a>
+  {% if current_user %}
+    {% if current_user.role == 'consumer' %}<a href="/consumer">我的认养</a>{% endif %}
+    {% if current_user.role == 'farmer' %}<a href="/farmer">农户工作台</a>{% endif %}
+    {% if current_user.role == 'admin' %}<a href="/admin">管理后台</a>{% endif %}
+  {% endif %}
+  <span class="spacer"></span>
+  {% if current_user %}
+    <span class="user-chip">{{ current_user.display_name }}（{% if current_user.role == 'admin' %}管理员{% elif current_user.role == 'farmer' %}农户{% else %}消费者{% endif %}）</span>
+    <a href="/auth/logout">退出</a>
+  {% else %}
+    <a href="/auth/login">登录</a>
+    <a href="/auth/register">注册</a>
+  {% endif %}
+</nav>
+
+<main class="container">
+  {% set f = request.state.flash_incoming if request.state is defined else none %}
+  {% if f %}
+    <div class="alert alert-{{ 'error' if f.category == 'error' else f.category }}">{{ f.message }}</div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<div class="footer">绿野认养 · 让每一份收获都有来处 · 演示平台</div>
+</body>
+</html>

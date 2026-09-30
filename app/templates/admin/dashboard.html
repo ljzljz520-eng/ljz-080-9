@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, progress %}
+{% block content %}
+<h1 class="page-title">平台经营总览</h1>
+<p class="page-sub">每块地的认养人数、采摘进度与售后问题，一屏掌握</p>
+
+<div class="grid grid-4 mb">
+  <div class="kpi"><div class="v">{{ kpi.plot_count }}</div><div class="l">地块总数</div></div>
+  <div class="kpi"><div class="v">{{ kpi.batch_count }}</div><div class="l">批次总数</div></div>
+  <div class="kpi"><div class="v">{{ kpi.farmer_count }} / {{ kpi.consumer_count }}</div><div class="l">农户 / 消费者</div></div>
+  <div class="kpi"><div class="v">{{ kpi.active_adoptions }}</div><div class="l">有效认养（份）</div></div>
+  <div class="kpi"><div class="v">{{ kpi.gmv | money }}</div><div class="l">认养金额合计</div></div>
+  <div class="kpi {{ 'danger' if kpi.open_aftersales else '' }}"><div class="v">{{ kpi.open_aftersales }}</div><div class="l">待处理售后</div></div>
+  <div class="kpi {{ 'warn' if kpi.open_events else '' }}"><div class="v">{{ kpi.open_events }}</div><div class="l">待处理天气事件</div></div>
+</div>
+
+<div class="flex mb">
+  <h2 class="page-title" style="margin:0">地块认养与采摘进度</h2>
+  <span style="flex:1"></span>
+  <a class="btn ghost sm" href="/admin/after-sales">售后工单</a>
+  <a class="btn ghost sm" href="/admin/weather-events">天气事件</a>
+</div>
+<div class="card" style="padding:0">
+<table class="data" style="box-shadow:none;">
+  <thead><tr><th>地块</th><th>农户</th><th>类型</th><th>认养人数</th><th>认养份数</th><th>采摘进度</th><th>待处理售后</th><th>天气事件</th><th></th></tr></thead>
+  <tbody>
+  {% for p in plots %}
+  <tr>
+    <td>{{ CROP_ICONS[p.crop_type] }} {{ p.name }}<div class="muted small">📍 {{ p.location }}</div></td>
+    <td>{{ p.farmer_name }}</td>
+    <td>{{ CROP_TYPES[p.crop_type] }}</td>
+    <td>{{ p.adopter_count }} 人</td>
+    <td>{{ p.adopted_slots }} 份</td>
+    <td style="min-width:160px">{{ progress(p.picked_slots, p.adopted_slots) }}</td>
+    <td>{% if p.open_aftersales %}<span class="badge badge-red">{{ p.open_aftersales }} 单</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+    <td>{% if p.open_events %}<span class="badge badge-amber">{{ p.open_events }} 起</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+    <td><a class="btn ghost sm" href="/admin/plots/{{ p.id }}">详情</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="9" class="empty">暂无地块</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="card mt">
+  <h3>最新售后问题</h3>
+  <table class="data" style="box-shadow:none;">
+    <thead><tr><th>消费者</th><th>批次</th><th>类型</th><th>问题</th><th>状态</th><th></th></tr></thead>
+    <tbody>
+    {% for s in recent_aftersales %}
+    <tr>
+      <td>{{ s.consumer_name }}</td>
+      <td><a href="/batches/{{ s.batch_id }}">{{ s.batch_name }}</a></td>
+      <td>{{ AFTERSALE_TYPES[s.issue_type] }}</td>
+      <td class="small">{{ s.content }}</td>
+      <td>{{ badge(s.status, AFTERSALE_STATUS) }}</td>
+      <td><a class="btn ghost sm" href="/admin/after-sales">处理</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty">暂无售后</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

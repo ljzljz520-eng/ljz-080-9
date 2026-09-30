@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, progress %}
+{% block content %}
+<a href="/farmer/plots/{{ batch.plot_id }}" class="muted">← 返回地块</a>
+<div class="card mt">
+  <div class="flex flex-wrap">
+    <div>
+      <h1 class="page-title" style="margin:0">{{ batch.name }}</h1>
+      <div class="muted">{{ batch.plot_name }} · 采摘期 {{ batch.pickup_start | date }} ~ {{ batch.pickup_end | date }}</div>
+    </div>
+    <span style="flex:1"></span>
+    {{ badge(batch.status, BATCH_STATUS) }}
+    {{ badge(batch.weather_status, BATCH_WEATHER_STATUS) }}
+    {% if batch.status != 'closed' %}
+    <form method="post" action="/farmer/batches/{{ batch.id }}/close"
+          onsubmit="return confirm('确认结束该批次？结束后不再接受认养。')">
+      <button class="btn ghost sm" type="submit">结束批次</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="grid grid-3 mt">
+    <div>认养进度<div class="mt">{{ progress(adopted, batch.total_slots) }}</div></div>
+    <div>采摘进度（按已认养）<div class="mt">{{ progress(picked, adopted) }}</div></div>
+    <div>单价 / 总份数<div class="mt"><strong>{{ batch.unit_price | money }}</strong> / 份 · 共 {{ batch.total_slots }} 份</div></div>
+  </div>
+</div>
+
+<div class="card card-section mt">
+  <h3>🌦️ 上报天气 / 产量影响事件</h3>
+  {% if batch.status == 'closed' %}
+    <div class="muted">批次已结束。</div>
+  {% else %}
+  <form method="post" action="/farmer/batches/{{ batch.id }}/weather">
+    <div class="grid grid-3">
+      <label class="field">事件类型
+        <select name="event_type">
+          {% for k, v in EVENT_TYPES.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="field">影响程度
+        <select name="severity">
+          <option value="minor">轻微</option>
+          <option value="moderate" selected>中等</option>
+          <option value="severe">严重</option>
+        </select>
+      </label>
+      <label class="field">发生日期<input type="date" name="event_date" required></label>
+    </div>
+    <label class="field">预计减产比例（%）<input type="number" name="yield_impact_pct" min="0" max="100" value="20"></label>
+    <label class="field">情况说明与采摘建议<textarea name="description" rows="2" placeholder="如：冰雹造成果面受伤，建议延后 7-10 天采摘"></textarea></label>
+    <button class="btn" type="submit">上报并生成消费者应对方案</button>
+    <span class="muted small">（系统将自动为每位待采摘消费者生成改期、退款、换批次三种方案）</span>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card card-section">
+  <h3>天气事件与方案选择情况</h3>
+  <table class="data" style="box-shadow:none;">
+    <thead><tr><th>日期</th><th>类型</th><th>程度</th><th>减产</th><th>待选择</th><th>已接受</th><th>状态</th><th>说明</th></tr></thead>
+    <tbody>
+    {% for e in events %}
+    <tr>
+      <td>{{ e.event_date | date }}</td>
+      <td>{{ EVENT_TYPES[e.event_type] }}</td>
+      <td>{{ badge(e.severity, SEVERITY) }}</td>
+      <td>{{ e.yield_impact_pct }}%</td>
+      <td>{{ e.pending_adoptions }} / {{ e.affected_total }}</td>
+      <td>{{ e.accepted_adoptions }}</td>
+      <td>{{ badge(e.status, EVENT_STATUS) }}</td>
+      <td class="small muted">{{ e.description }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" class="empty">暂无天气事件</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card card-section">
+  <h3>认养名单与采摘登记</h3>
+  <table class="data" style="box-shadow:none;">
+    <thead><tr><th>消费者</th><th>份数</th><th>预约日期</th><th>方式</th><th>金额</th><th>状态</th><th>采摘登记</th></tr></thead>
+    <tbody>
+    {% for a in rows %}
+    <tr>
+      <td>{{ a.consumer_name }}<div class="muted small">{{ a.contact_name }} {{ a.contact_phone }}</div></td>
+      <td>{{ a.slots }}</td>
+      <td>{{ a.scheduled_date | date }}</td>
+      <td class="small">{{ DELIVERY_MODES[a.delivery_mode] }}</td>
+      <td>{{ a.amount | money }}</td>
+      <td>{{ badge(a.status, ADOPTION_STATUS) }}{% if a.pending_count %} {{ badge('pending', RESOLUTION_STATUS) }}{% endif %}</td>
+      <td>
+        {% if a.status in ('booked','rescheduled') %}
+        <details>
+          <summary class="btn ghost sm" style="display:inline-block">登记</summary>
+          <form method="post" action="/farmer/picking" class="mt">
+            <input type="hidden" name="adoption_id" value="{{ a.id }}">
+            <input type="date" name="picked_date" value="{{ a.scheduled_date }}" required>
+            <input type="number" name="weight_kg" step="0.1" min="0" placeholder="重量 kg">
+            <input type="text" name="note" placeholder="备注（可选）">
+            <button class="btn sm" type="submit">确认采摘</button>
+          </form>
+        </details>
+        {% elif a.status == 'picked' %}
+          <span class="muted small">{{ a.picked_at | datetime }}</span>
+        {% else %}
+          <span class="muted small">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="empty">暂无认养</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>最近采摘记录</h3>
+  <table class="data" style="box-shadow:none;">
+    <thead><tr><th>日期</th><th>认养人</th><th>重量</th><th>备注</th></tr></thead>
+    <tbody>
+    {% for r in records %}
+    <tr><td>{{ r.picked_date | date }}</td><td>{{ r.contact_name }}</td><td>{{ r.weight_kg or '—' }} kg</td><td class="small muted">{{ r.note or '' }}</td></tr>
+    {% else %}
+    <tr><td colspan="4" class="empty">暂无采摘记录</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

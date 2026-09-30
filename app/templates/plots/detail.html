@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, slots_bar %}
+{% block content %}
+<a href="/plots" class="muted">← 返回地块列表</a>
+<div class="card mt">
+  <div class="flex">
+    <span style="font-size:40px">{{ CROP_ICONS[plot.crop_type] }}</span>
+    <div>
+      <h1 class="page-title" style="margin:0">{{ plot.name }}</h1>
+      <div class="muted">{{ plot.farmer_name }} · 📍 {{ plot.location }} · 占地 {{ plot.area_mu }} 亩 · 联系电话 {{ plot.farmer_phone or '未填写' }}</div>
+    </div>
+  </div>
+  <p class="mt muted">{{ plot.description or '暂无详细介绍' }}</p>
+</div>
+
+<h2 class="page-title mt">该地块的认养批次</h2>
+<div class="grid grid-2">
+  {% for b in batches %}
+  <div class="card batch-card">
+    <div class="title">{{ b.name }}</div>
+    <div class="tag-line">{{ badge(b.status, BATCH_STATUS) }}{{ badge(b.weather_status, BATCH_WEATHER_STATUS) }}</div>
+    <div class="muted">采摘期 {{ b.pickup_start | date }} ~ {{ b.pickup_end | date }}</div>
+    {{ slots_bar(b.adopted_slots, b.total_slots) }}
+    <div class="flex"><span class="price">{{ b.unit_price | money }}</span><span class="muted">/ 份</span><span style="flex:1"></span>
+      <a class="btn sm" href="/batches/{{ b.id }}">批次详情</a></div>
+  </div>
+  {% else %}
+  <div class="empty" style="grid-column:1/-1">该地块暂未发布批次</div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, progress %}
+{% block content %}
+<a href="/farmer" class="muted">← 返回工作台</a>
+<div class="card mt flex">
+  <span style="font-size:36px">{{ CROP_ICONS[plot.crop_type] }}</span>
+  <div>
+    <h1 class="page-title" style="margin:0">{{ plot.name }}</h1>
+    <div class="muted">{{ CROP_TYPES[plot.crop_type] }} · {{ plot.crop_name }} · 📍 {{ plot.location }} · {{ plot.area_mu }} 亩</div>
+  </div>
+  <span style="flex:1"></span>
+  <a class="btn" href="/farmer/plots/{{ plot.id }}/batches/new">+ 发布认养批次</a>
+</div>
+
+<h2 class="page-title mt">批次列表</h2>
+<div class="card" style="padding:0">
+<table class="data" style="box-shadow:none;">
+  <thead><tr><th>批次</th><th>状态</th><th>采摘期</th><th>认养进度</th><th>采摘进度</th><th>操作</th></tr></thead>
+  <tbody>
+  {% for b in batches %}
+  <tr>
+    <td><a href="/farmer/batches/{{ b.id }}">{{ b.name }}</a><div class="muted small">{{ b.season }}</div></td>
+    <td>{{ badge(b.status, BATCH_STATUS) }}<br>{{ badge(b.weather_status, BATCH_WEATHER_STATUS) }}</td>
+    <td class="small">{{ b.pickup_start | date }}<br>~ {{ b.pickup_end | date }}</td>
+    <td style="min-width:140px">{{ progress(b.adopted_slots, b.total_slots) }}</td>
+    <td style="min-width:140px">{{ progress(b.picked_slots, b.adopted_slots) }}</td>
+    <td><a class="btn ghost sm" href="/farmer/batches/{{ b.id }}">管理</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="empty">还没有批次</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

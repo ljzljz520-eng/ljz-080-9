@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, progress %}
+{% block content %}
+<a href="/admin" class="muted">← 返回总览</a>
+<div class="card mt">
+  <h1 class="page-title" style="margin-top:0">{{ CROP_ICONS[plot.crop_type] }} {{ plot.name }}</h1>
+  <div class="muted">农户 {{ plot.farmer_name }}（{{ plot.farmer_phone or '无电话' }}） · {{ CROP_TYPES[plot.crop_type] }} · {{ plot.crop_name }} · 📍 {{ plot.location }} · {{ plot.area_mu }} 亩</div>
+</div>
+
+<h2 class="page-title mt">批次进度</h2>
+<div class="card" style="padding:0">
+<table class="data" style="box-shadow:none;">
+  <thead><tr><th>批次</th><th>状态</th><th>认养人数</th><th>认养份数</th><th>采摘进度</th><th>天气</th></tr></thead>
+  <tbody>
+  {% for b in batches %}
+  <tr>
+    <td><a href="/batches/{{ b.id }}">{{ b.name }}</a><div class="muted small">{{ b.pickup_start | date }} ~ {{ b.pickup_end | date }}</div></td>
+    <td>{{ badge(b.status, BATCH_STATUS) }}</td>
+    <td>{{ b.adopter_count }} 人</td>
+    <td>{{ b.adopted_slots }} / {{ b.total_slots }}</td>
+    <td style="min-width:160px">{{ progress(b.picked_slots, b.adopted_slots) }}</td>
+    <td>{{ badge(b.weather_status, BATCH_WEATHER_STATUS) }}{% if b.open_events %}<div class="small muted">{{ b.open_events }} 起待处理</div>{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="empty">暂无批次</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2 class="page-title mt">该地块的售后问题</h2>
+<div class="card" style="padding:0">
+<table class="data" style="box-shadow:none;">
+  <thead><tr><th>消费者</th><th>认养单</th><th>类型</th><th>问题</th><th>状态</th><th>回复</th></tr></thead>
+  <tbody>
+  {% for s in after_sales %}
+  <tr>
+    <td>{{ s.consumer_name }}</td>
+    <td>#{{ s.adoption_id }}</td>
+    <td>{{ AFTERSALE_TYPES[s.issue_type] }}</td>
+    <td class="small">{{ s.content }}</td>
+    <td>{{ badge(s.status, AFTERSALE_STATUS) }}</td>
+    <td class="small">{{ s.reply or '—' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="empty">暂无售后问题</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

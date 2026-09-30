@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block content %}
+<div class="flex mb">
+  <h1 class="page-title" style="margin:0">售后工单</h1>
+  <span style="flex:1"></span>
+  <a class="btn ghost sm {{ '' }}" href="/admin/after-sales">全部</a>
+  <a class="btn ghost sm" href="/admin/after-sales?status=open">待处理</a>
+  <a class="btn ghost sm" href="/admin/after-sales?status=replied">已回复</a>
+  <a class="btn ghost sm" href="/admin/after-sales?status=closed">已关闭</a>
+</div>
+
+{% for s in rows %}
+<div class="card card-section">
+  <div class="flex flex-wrap">
+    <div>
+      <strong>#{{ s.id }} {{ s.consumer_name }}</strong>
+      <span class="muted small">{{ s.consumer_phone }}</span>
+      <div class="muted small">{{ s.plot_name }} · <a href="/batches/{{ s.batch_id }}">{{ s.batch_name }}</a> · 预约 {{ s.scheduled_date | date }} · {{ DELIVERY_MODES[s.delivery_mode] }}</div>
+    </div>
+    <span style="flex:1"></span>
+    <span class="badge badge-gray">{{ AFTERSALE_TYPES[s.issue_type] }}</span>
+    {{ badge(s.status, AFTERSALE_STATUS) }}
+  </div>
+  <p class="mt" style="margin-bottom:6px">{{ s.content }}</p>
+  <div class="muted small">提交于 {{ s.created_at | datetime }}</div>
+  {% if s.reply %}
+  <div class="alert alert-success small mt">平台回复：{{ s.reply }}</div>
+  {% endif %}
+  {% if s.status != 'closed' %}
+  <form method="post" action="/admin/after-sales/{{ s.id }}/reply" class="mt">
+    <textarea name="reply" rows="2" placeholder="回复处理方案，如补发、补偿券、协调退款…" required>{{ s.reply or '' }}</textarea>
+    <div class="mt flex">
+      <button class="btn sm" name="action" value="reply" type="submit">回复消费者</button>
+      <button class="btn sm secondary" name="action" value="close" type="submit">回复并关闭工单</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% else %}
+<div class="card empty">没有相关工单 🎉</div>
+{% endfor %}
+{% endblock %}

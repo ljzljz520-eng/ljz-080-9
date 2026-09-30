@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">发布新地块</h1>
+<p class="page-sub">果园、茶田或菜地，实名认证后对消费者展示</p>
+<div class="card form-card wide">
+  <form method="post" action="/farmer/plots">
+    <label class="field">地块名称<input type="text" name="name" placeholder="如：老王烟台苹果园 A 区" required></label>
+    <div class="grid grid-2">
+      <label class="field">地块类型
+        <select name="crop_type">
+          <option value="orchard">果园</option>
+          <option value="tea">茶田</option>
+          <option value="vegetable">菜地</option>
+        </select>
+      </label>
+      <label class="field">主要品种<input type="text" name="crop_name" placeholder="如：红富士苹果" required></label>
+    </div>
+    <div class="grid grid-2">
+      <label class="field">所在位置<input type="text" name="location" placeholder="如：山东烟台栖霞" required></label>
+      <label class="field">面积（亩）<input type="number" name="area_mu" step="0.1" min="0" value="0"></label>
+    </div>
+    <label class="field">地块介绍<textarea name="description" rows="3" placeholder="土壤、树龄、耕作方式等"></textarea></label>
+    <button class="btn" type="submit">发布地块</button>
+  </form>
+</div>
+{% endblock %}

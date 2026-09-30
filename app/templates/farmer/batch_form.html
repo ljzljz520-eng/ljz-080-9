@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/farmer/plots/{{ plot.id }}" class="muted">← 返回 {{ plot.name }}</a>
+<h1 class="page-title mt">发布认养批次</h1>
+<p class="page-sub">地块：{{ plot.name }}（{{ plot.crop_name }}）</p>
+<div class="card form-card wide">
+  <form method="post" action="/farmer/plots/{{ plot.id }}/batches">
+    <label class="field">批次名称<input type="text" name="name" placeholder="如：2027 明前龙井认养" required></label>
+    <div class="grid grid-2">
+      <label class="field">季节<input type="text" name="season" placeholder="如：2027 春季"></label>
+      <label class="field">每份预计产量<input type="text" name="yield_desc" placeholder="如：约 1 斤明前干茶/份"></label>
+    </div>
+    <div class="grid grid-3">
+      <label class="field">认养总份数<input type="number" name="total_slots" min="1" value="30" required></label>
+      <label class="field">每份价格（元）<input type="number" name="unit_price" min="0" step="0.01" value="199" required></label>
+      <label class="field">&nbsp;</label>
+    </div>
+    <div class="grid grid-2">
+      <label class="field">采摘开始日期<input type="date" name="pickup_start" required></label>
+      <label class="field">采摘结束日期<input type="date" name="pickup_end" required></label>
+    </div>
+    <label class="field">支持的取货 / 配送方式（可多选）
+      <div class="checks">
+        <label><input type="checkbox" name="delivery_options" value="self_pickup" checked> 到园自提</label>
+        <label><input type="checkbox" name="delivery_options" value="platform_delivery"> 平台配送</label>
+        <label><input type="checkbox" name="delivery_options" value="farm_ship"> 农户快递</label>
+      </div>
+    </label>
+    <button class="btn" type="submit">发布批次</button>
+  </form>
+</div>
+{% endblock %}

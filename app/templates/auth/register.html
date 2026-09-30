@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card form-card wide" style="margin:30px auto">
+  <h2 class="mt0">注册</h2>
+  <form method="post" action="/auth/register">
+    <div class="grid grid-2">
+      <label class="field">用户名 <span class="hint">（至少 3 位）</span><input type="text" name="username" required></label>
+      <label class="field">昵称 / 名称<input type="text" name="display_name" required></label>
+    </div>
+    <label class="field">密码 <span class="hint">（至少 6 位）</span><input type="password" name="password" required></label>
+    <label class="field">注册身份
+      <select name="role">
+        <option value="consumer">消费者（认养采摘）</option>
+        <option value="farmer">农户（发布地块与批次）</option>
+      </select>
+    </label>
+    <div class="grid grid-2">
+      <label class="field">联系电话<input type="tel" name="phone"></label>
+      <label class="field">地址<input type="text" name="address"></label>
+    </div>
+    <button class="btn" type="submit" style="width:100%">注册并登录</button>
+  </form>
+</div>
+{% endblock %}
