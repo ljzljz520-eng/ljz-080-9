@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}售后中心{% endblock %}
+{% block content %}
+<h1>售后中心</h1>
+<div class="inline" style="margin-bottom:12px">
+  <a class="btn sm {{ 'sec' if not filter else 'gray' }}" href="/admin/after-sales">全部</a>
+  <a class="btn sm {{ 'sec' if filter=='open' else 'gray' }}" href="/admin/after-sales?status=open">待处理</a>
+  <a class="btn sm {{ 'sec' if filter=='processing' else 'gray' }}" href="/admin/after-sales?status=processing">处理中</a>
+  <a class="btn sm {{ 'sec' if filter=='resolved' else 'gray' }}" href="/admin/after-sales?status=resolved">已解决</a>
+</div>
+
+<table>
+  <tr><th>#</th><th>订单</th><th>客户</th><th>产品/地块</th><th>类型</th><th>描述</th><th>状态 / 回复</th><th>处理</th></tr>
+  {% for s in rows %}
+  <tr>
+    <td>{{ s.id }}</td>
+    <td>#{{ s.adoption_id }}</td>
+    <td>{{ s.customer_name }}<div class="muted">{{ s.customer_phone }}</div></td>
+    <td>{{ s.produce_name }}（{{ '%g' % s.units }} {{ s.unit }}）<div class="muted">{{ s.plot_name }}</div></td>
+    <td>{{ L_KIND[s.kind] }}</td>
+    <td style="max-width:260px">{{ s.description }}<div class="muted">{{ s.created_at }}</div></td>
+    <td><span class="badge {{ BADGE[s.status] }}">{{ L_AST[s.status] }}</span>
+        {% if s.reply %}<div class="muted">回复：{{ s.reply }}</div>{% endif %}</td>
+    <td>
+      <form method="post" action="/admin/after-sales/{{ s.id }}" style="display:contents">
+        <select name="status" style="width:auto;margin-bottom:4px">
+          <option value="open" {{ 'selected' if s.status=='open' }}>待处理</option>
+          <option value="processing" {{ 'selected' if s.status=='processing' }}>处理中</option>
+          <option value="resolved" {{ 'selected' if s.status=='resolved' }}>已解决</option>
+        </select>
+        <input name="reply" placeholder="处理意见 / 回复" value="{{ s.reply or '' }}">
+        <button class="btn sm" type="submit">保存</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="8" class="muted">没有匹配的售后单。</td></tr>{% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}认养首页{% endblock %}
+{% block content %}
+<div class="inline" style="justify-content:space-between">
+  <div>
+    <h1 style="margin-bottom:4px">应季好货 · 预售认养中</h1>
+    <div class="muted">农户直供：果园、茶田、菜地任选；选定地块、采摘时间与配送方式，减产天气可改期 / 退款 / 换批次。</div>
+  </div>
+  <form class="inline" method="get" action="/my" style="margin:0">
+    <input name="phone" placeholder="手机号查询我的认养" style="width:200px" required>
+    <button class="btn sec" type="submit">查询</button>
+  </form>
+</div>
+
+<h2>认养批次</h2>
+<div class="grid grid-3">
+  {% for b in batches %}
+  <div class="card">
+    <div class="inline" style="justify-content:space-between">
+      <span class="tag">{{ L_PLOT[b.plot_type] }}</span>
+      <span class="badge {{ BADGE[b.status] }}">{{ L_BATCH[b.status] }}</span>
+    </div>
+    <h3 style="margin:10px 0 4px">{{ b.produce_name }}</h3>
+    <div class="muted">{{ b.farm_name }} · {{ b.plot_name }}</div>
+    <div style="margin:8px 0">
+      <span style="font-size:20px;font-weight:700;color:var(--green-d)">{{ b.price_per_unit | money }}</span>
+      <span class="muted">/ {{ b.unit }}</span>
+    </div>
+    <div class="muted">档期：{{ b.season_start }} ~ {{ b.season_end }}</div>
+    <div class="muted">剩余：{{ '%g' % b.remaining_units }} / {{ '%g' % b.total_units }} {{ b.unit }}
+      （已 {{ b.adopted_count }} 人认养）</div>
+    <div style="margin-top:10px">
+      {% if b.active_weather %}<span class="badge red">天气预警中</span>{% endif %}
+      <a class="btn sm" href="/batches/{{ b.id }}">查看 / 认养</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="card muted">暂无可认养批次</div>
+  {% endfor %}
+</div>
+
+<h2>合作地块</h2>
+<table>
+  <tr><th>地块</th><th>类型</th><th>所属农场</th><th>位置</th><th>面积</th><th>认养上限</th><th>批次数</th></tr>
+  {% for p in plots %}
+  <tr>
+    <td><a href="/admin/plots/{{ p.id }}">{{ p.name }}</a></td>
+    <td>{{ L_PLOT[p.plot_type] }}</td>
+    <td>{{ p.farm_name }}（{{ p.farmer_name }}）</td>
+    <td>{{ p.location }}</td>
+    <td>{{ p.area_mu }} 亩</td>
+    <td>{{ p.capacity }} 人</td>
+    <td>{{ p.batch_count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ plot.name }}{% endblock %}
+{% block content %}
+<a class="muted" href="{{ '/admin' if admin_mode else '/farmer' }}">← 返回</a>
+<h1>{{ plot.name }} <span class="tag">{{ L_PLOT[plot.plot_type] }}</span></h1>
+<div class="card">
+  <p><b>所属：</b>{{ plot.farm_name }}（{{ plot.farmer_name }}） · <b>位置：</b>{{ plot.location }}
+     · <b>面积：</b>{{ plot.area_mu }} 亩 · <b>认养人数上限：</b>{{ plot.capacity }} 人</p>
+  {% if plot.description %}<p class="muted">{{ plot.description }}</p>{% endif %}
+</div>
+
+<h2>地块经营指标</h2>
+<div class="grid grid-3">
+  <div class="stat"><div class="num">{{ stats.adoption_count or 0 }}</div><div class="lbl">认养订单数</div></div>
+  <div class="stat"><div class="num">{{ stats.customer_count or 0 }}</div><div class="lbl">认养人数（去重）</div></div>
+  <div class="stat"><div class="num">{{ stats.open_issues or 0 }}</div><div class="lbl">未结售后（共 {{ stats.total_issues or 0 }}）</div></div>
+</div>
+{% set base = stats.adopted_units or 0 %}
+<label style="margin-top:12px">采摘进度：已采摘 {{ '%g' % (stats.picked_units or 0) }} / 认养 {{ '%g' % base }} 单位
+  （已完成核销 {{ '%g' % (stats.completed_units or 0) }}）</label>
+<div class="progress" style="height:14px"><i style="width:{{ (stats.picked_units / base * 100) | round(1) if base else 0 }}%"></i></div>
+
+<h2>批次列表</h2>
+<table>
+  <tr><th>批次号</th><th>产品</th><th>档期</th><th>总量</th><th>剩余</th><th>单价</th><th>状态</th><th></th></tr>
+  {% for b in batches %}
+  <tr>
+    <td>{{ b.batch_no }}</td><td>{{ b.produce_name }}</td>
+    <td>{{ b.season_start }}~{{ b.season_end }}</td>
+    <td>{{ '%g' % b.total_units }} {{ b.unit }}</td><td>{{ '%g' % b.remaining_units }} {{ b.unit }}</td>
+    <td>{{ b.price_per_unit | money }}</td>
+    <td><span class="badge {{ BADGE[b.status] }}">{{ L_BATCH[b.status] }}</span></td>
+    <td><a class="btn sm gray" href="/batches/{{ b.id }}">查看</a>
+        {% if not admin_mode %}<a class="btn sm sec" href="/farmer/batches/{{ b.id }}">管理</a>{% endif %}</td>
+  </tr>
+  {% else %}<tr><td colspan="8" class="muted">暂无批次</td></tr>{% endfor %}
+</table>
+{% endblock %}

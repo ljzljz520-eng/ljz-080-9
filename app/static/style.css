@@ -1,0 +1,59 @@
+:root {
+  --green:#2e7d32; --green-d:#1b5e20; --green-l:#e8f5e9;
+  --amber:#f9a825; --red:#c62828; --red-l:#ffebee;
+  --blue:#1565c0; --purple:#6a1b9a; --gray:#607d8b;
+  --line:#e0e0e0; --bg:#f6f8f6; --text:#263238;
+}
+* { box-sizing:border-box; }
+body { margin:0; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px; }
+.container { max-width:1100px; margin:0 auto; padding:0 16px; }
+.topbar { background:var(--green-d); box-shadow:0 2px 6px rgba(0,0,0,.15); }
+.nav { display:flex; align-items:center; justify-content:space-between; height:56px; flex-wrap:wrap; }
+.brand { color:#fff; font-weight:700; font-size:18px; text-decoration:none; }
+.nav nav a { color:#dcedc8; text-decoration:none; margin-left:20px; font-size:14px; }
+.nav nav a:hover { color:#fff; }
+main.container { padding-top:20px; padding-bottom:40px; min-height:70vh; }
+h1 { font-size:22px; margin:8px 0 16px; }
+h2 { font-size:17px; margin:24px 0 10px; border-left:4px solid var(--green); padding-left:8px; }
+h3 { font-size:15px; margin:14px 0 8px; }
+.flash { margin-top:16px; padding:10px 14px; border-radius:6px; }
+.flash.ok { background:var(--green-l); border:1px solid #a5d6a7; color:var(--green-d); }
+.flash.err { background:var(--red-l); border:1px solid #ef9a9a; color:var(--red); }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+.grid { display:grid; gap:14px; }
+.grid-3 { grid-template-columns:repeat(3,1fr); }
+.grid-2 { grid-template-columns:repeat(2,1fr); }
+@media (max-width:800px){ .grid-3,.grid-2{grid-template-columns:1fr;} .nav nav a{margin-left:12px;} }
+.stat { background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; }
+.stat .num { font-size:26px; font-weight:700; color:var(--green-d); }
+.stat .lbl { color:var(--gray); margin-top:4px; }
+table { width:100%; border-collapse:collapse; background:#fff; font-size:13px; }
+th,td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+th { background:#f1f8e9; font-weight:600; white-space:nowrap; }
+tr:hover td { background:#fafdf7; }
+.badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; color:#fff; white-space:nowrap; }
+.badge.green{background:var(--green);} .badge.red{background:var(--red);} .badge.amber{background:var(--amber);}
+.badge.blue{background:var(--blue);} .badge.purple{background:var(--purple);} .badge.gray{background:var(--gray);}
+.btn { display:inline-block; border:0; border-radius:6px; padding:7px 14px; cursor:pointer;
+  background:var(--green); color:#fff; text-decoration:none; font-size:13px; }
+.btn:hover { background:var(--green-d); }
+.btn.sec { background:#fff; color:var(--green-d); border:1px solid var(--green); }
+.btn.gray { background:#fff; color:var(--text); border:1px solid var(--line); }
+.btn.danger { background:var(--red); }
+.btn.sm { padding:4px 10px; font-size:12px; }
+label { display:block; font-size:13px; margin:8px 0 3px; color:#455a64; }
+input,select,textarea { width:100%; padding:7px 9px; border:1px solid #cfd8dc; border-radius:6px;
+  font-size:13px; font-family:inherit; background:#fff; }
+textarea { min-height:60px; resize:vertical; }
+.form-row { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+@media (max-width:600px){ .form-row{grid-template-columns:1fr;} }
+.muted { color:var(--gray); font-size:12px; }
+.weather-box { background:var(--red-l); border:1px solid #ef9a9a; border-radius:8px; padding:12px 14px; margin:10px 0; }
+.progress { background:#e0e0e0; border-radius:999px; height:10px; overflow:hidden; min-width:90px; }
+.progress > i { display:block; height:100%; background:var(--green); border-radius:999px; }
+.progress.amber > i { background:var(--amber); }
+.right { text-align:right; }
+.inline { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.foot { color:var(--gray); font-size:12px; padding:20px 16px; border-top:1px solid var(--line); margin-top:20px; }
+.tag { font-size:12px; background:var(--green-l); color:var(--green-d); padding:1px 8px; border-radius:4px; }

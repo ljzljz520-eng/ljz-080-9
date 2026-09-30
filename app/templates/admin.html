@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}管理总览{% endblock %}
+{% block content %}
+<h1>平台管理总览</h1>
+<div class="grid grid-3">
+  <div class="stat"><div class="num">{{ totals.farmers }}</div><div class="lbl">入驻农户</div></div>
+  <div class="stat"><div class="num">{{ totals.plots }}</div><div class="lbl">地块数</div></div>
+  <div class="stat"><div class="num">{{ totals.batches }}</div><div class="lbl">认养批次</div></div>
+  <div class="stat"><div class="num">{{ totals.active_adoptions }}</div><div class="lbl">有效认养订单</div></div>
+  <div class="stat"><div class="num">{{ totals.gmv | money }}</div><div class="lbl">在约认养金额</div></div>
+  <div class="stat"><div class="num" style="color:var(--red)">{{ totals.active_weather }}</div><div class="lbl">进行中天气预警</div></div>
+  <div class="stat"><div class="num" style="color:var(--amber)">{{ totals.open_issues }}</div><div class="lbl">待处理售后</div></div>
+</div>
+
+<h2>每块地：认养人数 · 采摘进度 · 售后</h2>
+<table>
+  <tr><th>地块</th><th>农场</th><th>类型</th><th>认养人数</th><th>认养量</th><th>采摘进度</th><th>售后</th><th>预警</th><th></th></tr>
+  {% for p in plots %}
+  {% set pct = (p.picked_units / p.adopted_units * 100) | round(1) if p.adopted_units else 0 %}
+  <tr>
+    <td><a href="/admin/plots/{{ p.id }}">{{ p.name }}</a></td>
+    <td>{{ p.farm_name }}</td>
+    <td>{{ L_PLOT[p.plot_type] }}</td>
+    <td><b>{{ p.customer_count }}</b> / {{ p.capacity }} 人
+      <div class="muted">{{ p.adoption_count }} 笔订单</div></td>
+    <td>{{ '%g' % p.adopted_units }}</td>
+    <td>
+      <div class="progress {% if p.active_weather %}amber{% endif %}">
+        <i style="width:{{ pct }}%"></i></div>
+      <div class="muted">{{ '%g' % p.picked_units }} 已采 · {{ pct }}%</div>
+    </td>
+    <td>{% if p.open_issues %}<span class="badge red">{{ p.open_issues }} 待处理</span>
+        {% else %}<span class="muted">无</span>{% endif %}
+      <div class="muted">累计 {{ p.total_issues }}</div></td>
+    <td>{% if p.active_weather %}<span class="badge red">{{ p.active_weather }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+    <td><a class="btn sm gray" href="/admin/plots/{{ p.id }}">详情</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>进行中的天气影响事件</h2>
+<table>
+  <tr><th>#</th><th>批次/产品</th><th>地块</th><th>日期</th><th>类型</th><th>影响</th><th>减产</th><th>说明</th></tr>
+  {% for w in weather %}
+  <tr>
+    <td>{{ w.id }}</td><td><a href="/batches/{{ w.batch_id }}">{{ w.produce_name }}</a></td>
+    <td>{{ w.plot_name }}</td><td>{{ w.event_date }}</td>
+    <td>{{ L_WEATHER[w.kind] }}</td><td>{{ w.impact }}</td>
+    <td><span class="badge red">{{ w.yield_loss_pct }}%</span></td><td>{{ w.description }}</td>
+  </tr>
+  {% else %}<tr><td colspan="8" class="muted">暂无进行中的天气事件。</td></tr>{% endfor %}
+</table>
+
+<h2>全部批次</h2>
+<table>
+  <tr><th>批次号</th><th>产品</th><th>地块</th><th>档期</th><th>剩余/总量</th><th>状态</th><th></th></tr>
+  {% for b in batch_rows %}
+  <tr>
+    <td>{{ b.batch_no }}</td><td>{{ b.produce_name }}</td><td>{{ b.plot_name }}</td>
+    <td>{{ b.season_start }}~{{ b.season_end }}</td>
+    <td>{{ '%g' % b.remaining_units }}/{{ '%g' % b.total_units }}</td>
+    <td><span class="badge {{ BADGE[b.status] }}">{{ L_BATCH[b.status] }}</span></td>
+    <td><a class="btn sm gray" href="/batches/{{ b.id }}">前台查看</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}订单管理 {{ b.batch_no }}{% endblock %}
+{% block content %}
+<a class="muted" href="/farmer">← 返回工作台</a>
+<h1>{{ b.produce_name }} · {{ b.batch_no }}
+  <span class="badge {{ BADGE[b.status] }}">{{ L_BATCH[b.status] }}</span>
+</h1>
+
+<div class="grid grid-3">
+  <div class="stat"><div class="num">{{ adoptions|length }}</div><div class="lbl">订单总数</div></div>
+  <div class="stat"><div class="num">{{ '%g' % adopted_total }}</div><div class="lbl">有效认养量（{{ b.unit }}）</div></div>
+  <div class="stat"><div class="num">{{ '%g' % picked_units }}</div><div class="lbl">已采摘量（{{ b.unit }}）</div></div>
+</div>
+
+{% if adopted_total > 0 %}
+<label>采摘进度</label>
+<div class="progress {% if weather %}amber{% endif %}" style="height:14px">
+  <i style="width:{{ (picked_units / adopted_total * 100) | round(1) }}%"></i>
+</div>
+<div class="muted" style="margin:4px 0 12px">{{ (picked_units / adopted_total * 100) | round(1) }}%</div>
+{% endif %}
+
+{% if weather %}
+<div class="weather-box">
+  <b>⚠️ {{ L_WEATHER[weather.kind] }}（{{ weather.event_date }}）· {{ weather.impact }} · 减产约 {{ weather.yield_loss_pct }}%</b>
+  <p style="margin:6px 0">{{ weather.description }}</p>
+  <form method="post" action="/farmer/weather/{{ weather.id }}/resolve">
+    <button class="btn sm" type="submit">预警已解除（恢复正常预约）</button>
+  </form>
+</div>
+{% endif %}
+
+<table>
+  <tr><th>#</th><th>客户</th><th>数量</th><th>金额</th><th>采摘日</th><th>配送</th><th>状态</th><th>售后</th><th>核销</th></tr>
+  {% for a in adoptions %}
+  <tr>
+    <td>{{ a.id }}</td>
+    <td>{{ a.customer_name }}<div class="muted">{{ a.customer_phone }}</div></td>
+    <td>{{ '%g' % a.units }} {{ b.unit }}</td>
+    <td>{{ a.amount | money }}</td>
+    <td>{{ a.pickup_date }}{% if a.new_pickup_date %}<div class="muted">改至 {{ a.new_pickup_date }}</div>{% endif %}</td>
+    <td>{{ L_DELIVERY[a.delivery] }}{% if a.address %}<div class="muted">{{ a.address }}</div>{% endif %}</td>
+    <td><span class="badge {{ BADGE[a.status] }}">{{ L_ADOPTION[a.status] }}</span></td>
+    <td>{% if a.issue_count %}<span class="badge amber">{{ a.issue_count }} 单</span>{% else %}<span class="muted">无</span>{% endif %}</td>
+    <td>
+      {% if a.status in ['scheduled','rescheduled'] %}
+      <form method="post" action="/farmer/adoptions/{{ a.id }}/pick">
+        <input type="hidden" name="batch_id" value="{{ b.id }}">
+        <button class="btn sm">登记采摘</button>
+      </form>
+      {% elif a.status == 'picked' %}
+      <form method="post" action="/farmer/adoptions/{{ a.id }}/complete">
+        <input type="hidden" name="batch_id" value="{{ b.id }}">
+        <button class="btn sm sec">核销完成</button>
+      </form>
+      {% else %}<span class="muted">—</span>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

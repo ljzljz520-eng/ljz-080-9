@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}农户工作台{% endblock %}
+{% block content %}
+<h1>农户工作台 · {{ farmer.farm_name }}</h1>
+<div class="muted" style="margin-bottom:12px">联系人：{{ farmer.name }} {{ farmer.phone }} · {{ farmer.region }}</div>
+
+<div class="grid grid-3">
+  {% for p in plots %}
+  <div class="stat">
+    <div class="num">{{ p.adoption_count }}</div><div class="lbl">「{{ p.name }}」累计认养订单</div>
+    <div class="muted" style="margin-top:6px">
+      已采摘 {{ '%g' % (p.picked_units or 0) }} / 认养 {{ '%g' % (p.adopted_units or 0) }}
+      · 天气预警 {{ p.active_weather or 0 }} · 售后 {{ p.open_issues or 0 }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>我的批次与采摘进度</h2>
+<table>
+  <tr><th>批次</th><th>地块</th><th>产品</th><th>档期</th><th>认养/总量</th><th>采摘进度</th><th>状态</th><th>操作</th></tr>
+  {% for b in batches %}
+  {% set adopted = b.total_units - b.remaining_units %}
+  <tr>
+    <td>{{ b.batch_no }}</td>
+    <td>{{ b.plot_name }}</td>
+    <td>{{ b.produce_name }}</td>
+    <td>{{ b.season_start }}~{{ b.season_end }}</td>
+    <td>{{ '%g' % adopted }}/{{ '%g' % b.total_units }} {{ b.unit }}</td>
+    <td>
+      <div class="progress {% if b.status=='affected' %}amber{% endif %}">
+        <i style="width:{{ (adopted / b.total_units * 100) | round(1) }}%"></i>
+      </div>
+    </td>
+    <td><span class="badge {{ BADGE[b.status] }}">{{ L_BATCH[b.status] }}</span>
+        {% if b.active_weather %}<span class="badge red">预警</span>{% endif %}</td>
+    <td><a class="btn sm sec" href="/farmer/batches/{{ b.id }}">管理订单/核销</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<div class="grid grid-2" style="margin-top:20px">
+  <div class="card">
+    <h3 style="margin-top:0">发布新地块</h3>
+    <form method="post" action="/farmer/plots">
+      <div class="form-row">
+        <div><label>地块类型</label>
+          <select name="plot_type">
+            <option value="orchard">果园</option><option value="tea_garden">茶田</option>
+            <option value="vegetable_field">菜地</option>
+          </select></div>
+        <div><label>地块名称</label><input name="name" required placeholder="如：北坡五号桃园"></div>
+      </div>
+      <div class="form-row">
+        <div><label>位置</label><input name="location" required></div>
+        <div><label>面积（亩）</label><input name="area_mu" type="number" min="0.1" step="0.1" required></div>
+      </div>
+      <div class="form-row">
+        <div><label>认养人数上限</label><input name="capacity" type="number" min="1" required></div>
+        <div><label>简介</label><input name="description"></div>
+      </div>
+      <button class="btn" type="submit">发布地块</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">发布认养批次</h3>
+    <form method="post" action="/farmer/batches">
+      <div class="form-row">
+        <div><label>所属地块</label>
+          <select name="plot_id">
+            {% for p in plots %}<option value="{{ p.id }}">{{ p.name }}（{{ L_PLOT[p.plot_type] }}）</option>{% endfor %}
+          </select></div>
+        <div><label>产品名称</label><input name="produce_name" required placeholder="如：明前碧螺春"></div>
+      </div>
+      <div class="form-row">
+        <div><label>计量单位</label><input name="unit" required placeholder="斤 / 盒(250g)"></div>
+        <div><label>预计总产量</label><input name="total_units" type="number" min="0.1" step="0.1" required></div>
+      </div>
+      <div class="form-row">
+        <div><label>单价（元）</label><input name="price_per_unit" type="number" min="0.01" step="0.01" required></div>
+        <div><label>档期开始</label><input name="season_start" type="date" required></div>
+      </div>
+      <div class="form-row">
+        <div><label>档期结束</label><input name="season_end" type="date" required></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn" type="submit">发布批次</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">登记天气影响（系统将通知客户改期 / 退款 / 换批次）</h3>
+  <form method="post" action="/farmer/weather" class="form-row">
+    <div><label>受影响批次</label>
+      <select name="batch_id">
+        {% for b in batches %}<option value="{{ b.id }}">{{ b.batch_no }} {{ b.produce_name }}</option>{% endfor %}
+      </select></div>
+    <div><label>发生日期</label><input name="event_date" type="date" value="2026-09-30" required></div>
+    <div><label>天气类型</label>
+      <select name="kind">
+        <option value="frost">倒春寒/霜冻</option><option value="drought">干旱</option>
+        <option value="rain">连阴雨</option><option value="storm">冰雹大风</option>
+        <option value="heat">持续高温</option>
+      </select></div>
+    <div><label>影响描述（简短）</label><input name="impact" required placeholder="如：预计减产约三成"></div>
+    <div><label>预估减产比例 %</label><input name="yield_loss_pct" type="number" min="1" max="100" value="30" required></div>
+    <div><label>详细说明</label><input name="description"></div>
+    <div style="grid-column:1/-1"><button class="btn danger" type="submit">发布天气预警</button></div>
+  </form>
+</div>
+{% endblock %}

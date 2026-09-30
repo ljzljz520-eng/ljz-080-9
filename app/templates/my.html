@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}我的认养{% endblock %}
+{% block content %}
+<h1>我的认养</h1>
+<div class="card">
+  <form method="get" action="/my" class="inline">
+    <input name="phone" value="{{ phone }}" placeholder="输入下单手机号" style="width:240px" required>
+    <button class="btn" type="submit">查询订单</button>
+  </form>
+</div>
+
+{% for a in adoptions %}
+<div class="card">
+  <div class="inline" style="justify-content:space-between">
+    <div>
+      <b>订单 #{{ a.id }}</b> · {{ a.produce_name }}（{{ '%g' % a.units }} {{ a.unit }}）
+      <span class="muted">{{ a.farm_name }} · {{ a.plot_name }}</span>
+      <span class="badge {{ BADGE[a.status] }}">{{ L_ADOPTION[a.status] }}</span>
+    </div>
+    <div><b>{{ a.amount | money }}</b></div>
+  </div>
+  <p class="muted" style="margin:6px 0">
+    采摘日 {{ a.pickup_date }} · {{ L_DELIVERY[a.delivery] }}{% if a.address %} · {{ a.address }}{% endif %}
+  </p>
+
+  {% if a.weather_id and not a.resolution %}
+  <div class="weather-box">
+    <b>天气影响待处理：{{ L_WEATHER[a.weather_kind] }}，{{ a.weather_impact }}</b>
+    <p class="muted">请在以下三种方式中选择其一：</p>
+    <div class="grid grid-3">
+      <form method="post" action="/adoptions/{{ a.id }}/resolve">
+        <input type="hidden" name="resolution" value="reschedule">
+        <label>① 改期采摘（本批次档期 {{ a.season_start }}~{{ a.season_end }}）</label>
+        <input type="date" name="new_pickup_date" min="{{ a.season_start }}" max="{{ a.season_end }}" required>
+        <button class="btn sm" style="margin-top:8px" type="submit">申请改期</button>
+      </form>
+      <form method="post" action="/adoptions/{{ a.id }}/resolve">
+        <input type="hidden" name="resolution" value="refund">
+        <label>② 全额退款</label>
+        <p class="muted">已支付 {{ a.amount | money }} 将原路退回，库存释放。</p>
+        <button class="btn sm danger" style="margin-top:8px" type="submit">申请退款</button>
+      </form>
+      <form method="post" action="/adoptions/{{ a.id }}/resolve">
+        <input type="hidden" name="resolution" value="transfer">
+        <label>③ 换其他批次（多退少补）</label>
+        <select name="new_batch_id" required>
+          {% for alt in alternatives %}
+          <option value="{{ alt.id }}">{{ alt.produce_name }} · {{ alt.price_per_unit }}元/{{ alt.unit }}（{{ alt.farm_name }}）</option>
+          {% endfor %}
+        </select>
+        <button class="btn sm sec" style="margin-top:8px" type="submit">确认换批次</button>
+      </form>
+    </div>
+  </div>
+  {% elif a.resolution %}
+  <p class="muted">天气售后选择：<b>{{ L_RES[a.resolution] }}</b>
+    {% if a.resolution == 'reschedule' and a.new_pickup_date %} · 新采摘日 {{ a.new_pickup_date }}{% endif %}
+    {% if a.resolution == 'transfer' and a.new_produce_name %} · 已换至「{{ a.new_produce_name }}」{% endif %}
+  </p>
+  {% endif %}
+
+  {% if a.status in ['picked','completed','rescheduled','scheduled'] %}
+  <details style="margin-top:8px">
+    <summary class="btn sm gray" style="display:inline-block">申请售后</summary>
+    <form method="post" action="/after-sales" style="margin-top:10px;max-width:520px">
+      <input type="hidden" name="adoption_id" value="{{ a.id }}">
+      <label>问题类型</label>
+      <select name="kind">
+        <option value="quality">品质问题</option>
+        <option value="shortage">缺斤少两</option>
+        <option value="delay">配送延误</option>
+        <option value="other">其他</option>
+      </select>
+      <label>问题描述</label>
+      <textarea name="description" required placeholder="请描述具体问题，平台将在 48 小时内处理"></textarea>
+      <button class="btn sm" type="submit" style="margin-top:8px">提交售后</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+{% else %}
+  {% if phone %}<div class="card muted">该手机号下暂无认养订单。</div>{% endif %}
+{% endfor %}
+{% endblock %}

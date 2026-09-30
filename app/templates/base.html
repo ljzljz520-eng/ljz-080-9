@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}绿野认养{% endblock %} · 农产品预售采摘认养平台</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="container nav">
+    <a class="brand" href="/">🌱 绿野认养</a>
+    <nav>
+      <a href="/">认养首页</a>
+      <a href="/my">我的认养</a>
+      <a href="/farmer">农户工作台</a>
+      <a href="/admin">管理总览</a>
+      <a href="/admin/after-sales">售后中心</a>
+    </nav>
+  </div>
+</header>
+{% set flash_msg = request.query_params.get('msg') %}
+{% if flash_msg %}
+<div class="container"><div class="flash {{ 'ok' if request.query_params.get('ok') != '0' else 'err' }}">
+  {{ flash_msg }}
+</div></div>
+{% endif %}
+<main class="container">
+{% block content %}{% endblock %}
+</main>
+<footer class="container foot">
+  <span>绿野认养 · 果园 / 茶田 / 菜地预售采摘认养演示平台 · FastAPI + Jinja2 + DuckDB</span>
+</footer>
+</body>
+</html>

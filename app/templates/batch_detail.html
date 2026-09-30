@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ b.produce_name }}{% endblock %}
+{% block content %}
+<a class="muted" href="/">← 返回首页</a>
+<h1>{{ b.produce_name }}
+  <span class="badge {{ BADGE[b.status] }}">{{ L_BATCH[b.status] }}</span>
+</h1>
+<div class="card">
+  <div class="grid grid-2">
+    <div>
+      <p><b>批次编号：</b>{{ b.batch_no }}</p>
+      <p><b>农场：</b>{{ b.farm_name }}（{{ b.farmer_name }}，{{ b.farmer_phone }}）</p>
+      <p><b>地块：</b>{{ b.plot_name }}（{{ L_PLOT[b.plot_type] }}）· {{ b.location }}</p>
+      <p><b>采摘档期：</b>{{ b.season_start }} ~ {{ b.season_end }}</p>
+    </div>
+    <div>
+      <p><b>认养价：</b><span style="color:var(--green-d);font-size:18px;font-weight:700">{{ b.price_per_unit | money }}</span> / {{ b.unit }}</p>
+      <p><b>预计产量：</b>{{ '%g' % b.total_units }} {{ b.unit }}；<b>剩余可认养：</b>{{ '%g' % b.remaining_units }} {{ b.unit }}</p>
+      <div class="progress"><i style="width:{{ ((b.total_units - b.remaining_units) / b.total_units * 100) | round(1) }}%"></i></div>
+      <p class="muted" style="margin-top:6px">已认养 {{ '%g' % (b.total_units - b.remaining_units) }} {{ b.unit }}</p>
+    </div>
+  </div>
+</div>
+
+{% if weather %}
+<div class="weather-box">
+  <b>⚠️ 天气影响通知（{{ L_WEATHER[weather.kind] }}）</b>
+  <p style="margin:6px 0">{{ weather.description or weather.impact }}，发生于 {{ weather.event_date }}，{{ weather.impact }}（约 {{ weather.yield_loss_pct }}%）。</p>
+  <p style="margin:0">已认养客户可在「<a href="/my">我的认养</a>」中选择 <b>改期采摘 / 全额退款 / 换其他批次</b>。</p>
+</div>
+{% endif %}
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3 style="margin-top:0">立即认养</h3>
+    {% if b.status == 'affected' %}
+      <p class="flash err">该批次受天气影响暂停认养，请选择其他批次。</p>
+    {% elif b.status == 'closed' %}
+      <p class="flash err">该批次采摘档期已结束。</p>
+    {% elif b.remaining_units <= 0 %}
+      <p class="flash err">该批次已认满。</p>
+    {% else %}
+    <form method="post" action="/adoptions">
+      <input type="hidden" name="batch_id" value="{{ b.id }}">
+      <div class="form-row">
+        <div><label>姓名</label><input name="customer_name" required maxlength="40"></div>
+        <div><label>手机号</label><input name="customer_phone" required pattern="[0-9]{6,20}" title="手机号"></div>
+      </div>
+      <div class="form-row">
+        <div><label>认养数量（{{ b.unit }}）</label>
+          <input name="units" type="number" min="0.1" step="0.1" max="{{ b.remaining_units }}" value="1" required></div>
+        <div><label>采摘时间（档期内任选）</label>
+          <input name="pickup_date" type="date" min="{{ b.season_start }}" max="{{ b.season_end }}"
+                 value="{{ b.season_start }}" required></div>
+      </div>
+      <label>配送方式</label>
+      <select name="delivery" id="delivery">
+        <option value="self_pick">到园自提</option>
+        <option value="express">冷链快递（运费到付）</option>
+        <option value="logistics">集中配送点自提</option>
+      </select>
+      <label id="addr-label" style="display:none">配送 / 自提地址</label>
+      <input name="address" id="address" style="display:none" placeholder="详细地址或选择的自提点">
+      <button class="btn" type="submit" style="margin-top:12px">确认认养（预售）</button>
+      <span class="muted">提交后可在「我的认养」凭手机号查看与售后</span>
+    </form>
+    <script>
+      const d = document.getElementById('delivery'), a = document.getElementById('address'), l = document.getElementById('addr-label');
+      function sync(){ const show = d.value !== 'self_pick'; a.style.display = show?'':'none'; l.style.display=show?'':'none'; }
+      d.addEventListener('change', sync); sync();
+    </script>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">认养名单（{{ adoptions|length }}）</h3>
+    <table>
+      <tr><th>客户</th><th>数量</th><th>采摘日</th><th>配送</th><th>状态</th></tr>
+      {% for a in adoptions %}
+      <tr>
+        <td>{{ a.customer_name }}<div class="muted">{{ a.customer_phone }}</div></td>
+        <td>{{ '%g' % a.units }} {{ b.unit }}</td>
+        <td>{{ a.pickup_date }}</td>
+        <td>{{ L_DELIVERY[a.delivery] }}</td>
+        <td><span class="badge {{ BADGE[a.status] }}">{{ L_ADOPTION[a.status] }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="muted">还没有人认养，来做第一位吧。</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}
